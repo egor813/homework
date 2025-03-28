@@ -1,4 +1,10 @@
-def handle_input(inp):
+#!/usr/bin/env python3 
+ 
+import sys  
+import base64 
+
+
+def input(inp):
     if '-d' in inp:
         return decode_ascii85(inp.replace('-d', '').strip())
     return encode_ascii85(inp.replace('-e', '').strip())
