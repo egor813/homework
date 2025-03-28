@@ -1,0 +1,38 @@
+def handle_input(inp):
+    if '-d' in inp:
+        return decode_ascii85(inp.replace('-d', '').strip())
+    return encode_ascii85(inp.replace('-e', '').strip())
+
+def encode_ascii85(string):
+    byte_array = bytearray(string.encode())
+    hexes = [hex(i) for i in byte_array]
+    hexes += ['0x00'] * ((4 - len(hexes) % 4) % 4)
+    bytes5 = ['0x' + ''.join(hexes[i:i + 4])[2:] for i in range(0, len(hexes), 4)]
+    pos = next((i for i in range(len(bytes5[-1]) - 1) if bytes5[-1][i:i + 2] == '00'), len(bytes5[-1]) - 1)
+    res = []
+    for byte in bytes5:
+        n10 = int(byte, 16)
+        digits = [(n10 // (85 ** i)) % 85 + 33 for i in range(5)][::-1]
+        res.append(''.join(chr(digit) for digit in digits))
+    return ''.join(res)[:(-1) * ((10 - pos) // 2)]
+
+def decode_ascii85(encoded_string):
+    while len(encoded_string) % 5 != 0:
+        encoded_string += 'u'  # Fill with 'u' to make length divisible by 5
+    bytes5 = []
+    for i in range(0, len(encoded_string), 5):
+        block = encoded_string[i:i + 5]
+        n10 = sum((ord(block[j]) - 33) * (85 ** (4 - j)) for j in range(5))
+        bytes5.append(n10)
+    decoded_bytes = bytearray()
+    for n in bytes5:
+        decoded_bytes.extend(n.to_bytes(4, 'big'))
+    return decoded_bytes.rstrip(b'\x00').decode()
+
+if __name__ == "__main__":
+    input_string = sys.stdin.readline()
+    try:
+        print(handle_input(input_string.strip()))
+    except Exception as e:
+        print('Error: invalid string for decoding')
+        sys.exit(1)
